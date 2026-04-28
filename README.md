@@ -1,6 +1,6 @@
 <div align="center">
 
-# 🦿 Pathological Gait Anomaly Detection
+# Pathological Gait Anomaly Detection
 
 ### *Deep Learning Autoencoders for Wearable Sensor-Based Gait Analysis*
 
@@ -11,90 +11,57 @@
 
 <br>
 
-**Learn what *normal* walking looks like. Flag everything else.**
+**Learn what *"normal* walking looks like. Flag everything else.**
 
 An unsupervised anomaly detection pipeline that trains autoencoder models on healthy gait patterns from 38-channel wearable IMU + EMG sensors, then identifies pathological deviations through reconstruction error thresholding.
-
-<br>
-
-<img src="results/error_distribution.png" alt="Reconstruction Error Distribution" width="600"/>
 
 </div>
 
 ---
 
-## ⚡ Highlights
+## Highlights
 
-- 🧠 **Dual Architecture** — LSTM Autoencoder (sequential baseline) vs. Patch-based Transformer Autoencoder (2024 SOTA)
-- 🔧 **Gyroscope Corruption Repair** — Automated detection & correction of 10× amplification + int16 clipping artifacts across 300+ files
-- 📊 **38-Channel Sensor Fusion** — 18 accelerometer + 18 gyroscope + 2 EMG channels from 6 body locations
-- 🏥 **Clinical Feature Engineering** — Symmetry Index, Harmonic Ratio, Jerk, Step Regularity, EMG Asymmetry
-- 🧪 **Subject-Aware Evaluation** — Strict leave-N-subjects-out protocol (12 train / 3 val / 3 test) to prevent data leakage
-- 📈 **Full Visualization Suite** — Training curves, error distributions, reconstruction overlays, symmetry scatter plots
-
----
-
-## 🏗️ Architecture Overview
-
-```
-                    ┌─────────────────────────────────────┐
-                    │         HuGaDB Wearable Dataset     │
-                    │   18 subjects · 6 IMU + 2 EMG · 60Hz│
-                    └────────────────┬────────────────────┘
-                                     │
-                          ┌──────────▼──────────┐
-                          │   Data Pipeline      │
-                          │ • Gyro correction ÷10│
-                          │ • Clip interpolation │
-                          │ • Z-score norm       │
-                          │ • Sliding windows    │
-                          │   128 × 38           │
-                          └──────────┬───────────┘
-                                     │
-                    ┌────────────────┼────────────────┐
-                    │                                  │
-          ┌─────────▼─────────┐            ┌───────────▼───────────┐
-          │  LSTM Autoencoder  │            │  Patch Transformer AE │
-          │                    │            │                       │
-          │ Enc: 2×LSTM(128)   │            │ Patch: 16 → 8 tokens │
-          │ Bottleneck: 32     │            │ 3× TransformerEnc     │
-          │ Dec: 2×LSTM(128)   │            │ d_model=128, 8 heads  │
-          │ Params: ~660K      │            │ Params: ~1.8M         │
-          └─────────┬──────────┘            └───────────┬───────────┘
-                    │                                    │
-                    └────────────────┬───────────────────┘
-                                     │
-                          ┌──────────▼──────────┐
-                          │  Anomaly Scoring     │
-                          │  MSE > P95 threshold │
-                          │  → Pathological Flag │
-                          └──────────────────────┘
-```
+- **Dual Architecture** — LSTM Autoencoder (sequential baseline) vs. Patch-based Transformer Autoencoder (2024 SOTA approach)
+- **Gyroscope Corruption Repair** — Automated detection and correction of 10x amplification + int16 clipping artifacts across 300+ files
+- **38-Channel Sensor Fusion** — 18 accelerometer + 18 gyroscope + 2 EMG channels from 6 body locations
+- **Clinical Feature Engineering** — Symmetry Index, Harmonic Ratio, Jerk, Step Regularity, EMG Asymmetry
+- **Subject-Aware Evaluation** — Strict leave-N-subjects-out protocol (12 train / 3 val / 3 test) to prevent data leakage
+- **Full Visualization Suite** — Training curves, error distributions, reconstruction overlays, symmetry scatter plots
 
 ---
 
-## 📂 Project Structure
+## Pipeline Architecture
+
+<div align="center">
+<img src="results/pipeline_flowchart.png" alt="End-to-End Pipeline Flowchart" width="750"/>
+<br><br>
+<em>Figure 1: End-to-end pipeline from raw HuGaDB sensor data to pathological gait classification.</em>
+</div>
+
+---
+
+## Project Structure
 
 ```
 .
 ├── train_anomaly.py           # Train LSTM Autoencoder
 ├── train_transformer.py       # Train Patch Transformer Autoencoder
-├── create_db.py               # Convert HuGaDB .txt → SQLite
+├── create_db.py               # Convert HuGaDB .txt files to SQLite database
 ├── requirements.txt           # Python dependencies
 │
 ├── src/
-│   ├── config.py              # All hyperparameters & paths (single source of truth)
+│   ├── config.py              # All hyperparameters and paths (single source of truth)
 │   ├── data/
 │   │   ├── preprocessing.py   # Load → correct → normalize → window pipeline
-│   │   ├── corruption_map.py  # Per-file gyroscope corruption registry (300+ files)
-│   │   ├── features.py        # Gait symmetry & temporal feature extraction
-│   │   └── dataset.py         # PyTorch Dataset + augmentation
+│   │   ├── corruption_map.py  # Per-file gyroscope corruption registry (300+ entries)
+│   │   ├── features.py        # Gait symmetry and temporal feature extraction
+│   │   └── dataset.py         # PyTorch Dataset + time-series augmentation
 │   ├── models/
 │   │   ├── autoencoder.py     # LSTM Autoencoder (encoder–bottleneck–decoder)
 │   │   └── transformer.py     # Patch-based Transformer Autoencoder
 │   ├── training/
 │   │   ├── trainer.py         # Training loop, early stopping, checkpointing
-│   │   ├── losses.py          # MSE reconstruction loss (channel-weightable)
+│   │   ├── losses.py          # MSE reconstruction loss with optional channel weighting
 │   │   └── metrics.py         # ROC-AUC, F1, anomaly threshold computation
 │   └── utils/
 │       └── visualization.py   # Training curves, error histograms, signal overlays
@@ -102,14 +69,14 @@ An unsupervised anomaly detection pipeline that trains autoencoder models on hea
 ├── results/                   # Generated plots (LSTM)
 │   └── transformer/           # Generated plots (Transformer)
 ├── checkpoints/               # Saved model weights (.pt)
-└── HumanGaitDataBase/         # Raw HuGaDB dataset (not tracked)
+└── HumanGaitDataBase/         # Raw HuGaDB dataset (not tracked in git)
 ```
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-### 1. Clone & Install
+### 1. Clone and Install
 
 ```bash
 git clone https://github.com/Smarth2005/gait-anomaly-detection.git
@@ -122,7 +89,6 @@ pip install -r requirements.txt
 Download the [HuGaDB dataset](https://github.com/romanchereshnev/HuGaDB) and place the `Data/` folder inside `HumanGaitDataBase/`.
 
 ```bash
-# Build the SQLite database from raw text files
 python create_db.py HumanGaitDataBase/Data
 ```
 
@@ -136,79 +102,122 @@ python train_anomaly.py
 python train_transformer.py
 ```
 
-Training runs for up to 50 epochs with early stopping (patience=10) and CosineAnnealingWarmRestarts scheduling. Results and plots are saved automatically.
+Both scripts run for up to 50 epochs with early stopping (patience=10) and CosineAnnealingWarmRestarts scheduling. Results and plots are saved automatically to `results/`.
 
 ---
 
-## 🔬 Data Pipeline Deep Dive
+## Data Pipeline
 
 ### Gyroscope Corruption Handling
 
-The HuGaDB dataset contains a **documented 10× amplification bug** in gyroscope channels across hundreds of files, with values clipped at the int16 boundary (±32767). Our pipeline:
+The HuGaDB dataset contains a **documented 10x amplification bug** in gyroscope channels across hundreds of files, with values clipped at the int16 boundary (±32767). The pipeline handles this in three steps:
 
 1. **Maps** corrupted channels per-file using a hand-built registry of 300+ entries
 2. **Divides** affected channels by 10 to restore true scale
-3. **Interpolates** clipped values (formerly at ±32767 → now ±3276.7) using linear interpolation
+3. **Interpolates** clipped values (formerly at ±32767, now ±3276.7) using linear interpolation
 
 ### Feature Engineering
 
-Beyond raw reconstruction error, we extract **clinically meaningful gait features**:
+Beyond raw reconstruction error, clinically meaningful gait features are extracted for interpretability:
 
 | Feature | What It Captures | Clinical Relevance |
 |---|---|---|
 | **Symmetry Index** | Left–right imbalance per body segment | Hemiplegia, limb length discrepancy |
-| **Harmonic Ratio** | Even/odd harmonic ratio in vertical acc | Gait smoothness & rhythm |
+| **Harmonic Ratio** | Even/odd harmonic ratio in vertical acceleration | Gait smoothness and rhythm |
 | **Step Regularity** | Autocorrelation peak height | Consistency of stride timing |
 | **Jerk** | Rate of change of acceleration | Movement smoothness / spasticity |
 | **EMG Asymmetry** | Left–right muscle activation imbalance | Neuromuscular disorders |
 
 ---
 
-## 📊 Results
+## Results
 
 ### LSTM Autoencoder
-| Metric | Train | Val | Test |
-|---|---|---|---|
-| **Mean MSE** | Low | Low | Low |
-| **Anomaly Rate** | — | 5% (by design) | Varies by subject |
 
-### Patch Transformer Autoencoder
-- Captures **longer-range temporal dependencies** via self-attention over 8 patches
-- Generally achieves **tighter reconstruction** on normal gait patterns
-
-Both models produce rich visualizations:
+The LSTM Autoencoder serves as the sequential baseline model (~660K parameters). It compresses each 128×38 sensor window into a 32-dimensional bottleneck representation and reconstructs it. Windows with reconstruction error exceeding the 95th percentile threshold (2.8637) are flagged as anomalous.
 
 <div align="center">
 
-| Training Curves | Reconstruction Examples |
+| Training Progress | Error Distribution |
 |:---:|:---:|
-| <img src="results/training_history.png" width="400"/> | <img src="results/reconstruction_examples.png" width="400"/> |
+| <img src="results/training_history.png" width="420"/> | <img src="results/error_distribution.png" width="420"/> |
 
-| Error Distribution | Symmetry Features |
+*Figure 2 (left): Training and validation loss curves over 50 epochs with CosineAnnealingWarmRestarts learning rate schedule. (right): Reconstruction error distribution across train, validation, and test splits with the anomaly threshold at P95 = 2.8637.*
+
+</div>
+
+<div align="center">
+
+| Reconstruction Examples | Gait Symmetry Features |
 |:---:|:---:|
-| <img src="results/error_distribution.png" width="400"/> | <img src="results/symmetry_features.png" width="400"/> |
+| <img src="results/reconstruction_examples.png" width="420"/> | <img src="results/symmetry_features.png" width="420"/> |
+
+*Figure 3 (left): Original vs reconstructed sensor signals for normal (low MSE) and anomalous (high MSE) windows across accelerometer, gyroscope, and EMG channels. (right): Gait symmetry features (Symmetry Index, Left/Right Ratios) plotted against reconstruction error. Anomalous windows (crimson) cluster at higher feature asymmetry values.*
 
 </div>
 
 ---
 
-## ⚙️ Configuration
+### Patch Transformer Autoencoder
 
-All hyperparameters live in a single file — [`src/config.py`](src/config.py):
+The Patch-based Transformer Autoencoder (~1.8M parameters) segments each window into 8 non-overlapping patches of size 16, embeds them, and applies multi-head self-attention. This captures **longer-range temporal dependencies** compared to the LSTM and achieves **tighter reconstruction** on normal gait patterns, with a lower anomaly threshold of 1.7257.
 
-| Parameter | Value | Description |
-|---|---|---|
-| `WINDOW_SIZE` | 128 | ~2.1 seconds at 60 Hz |
-| `WINDOW_STRIDE` | 64 | 50% overlap |
-| `BOTTLENECK_DIM` | 32 | Latent space dimensionality |
-| `BATCH_SIZE` | 256 | Training batch size |
-| `LEARNING_RATE` | 1e-3 | AdamW initial LR |
-| `EARLY_STOPPING` | 10 epochs | Patience before stopping |
-| `ANOMALY_PERCENTILE` | 95 | Threshold = P95 of val errors |
+<div align="center">
+
+| Training Progress | Error Distribution |
+|:---:|:---:|
+| <img src="results/transformer/transformer_training_history.png" width="420"/> | <img src="results/transformer/transformer_error_distribution.png" width="420"/> |
+
+*Figure 4 (left): Transformer training convergence — smoother loss curves compared to the LSTM model, indicating more stable optimization. (right): Tighter error distribution with threshold at P95 = 1.7257, reflecting better reconstruction capability on normal gait.*
+
+</div>
+
+<div align="center">
+
+| Reconstruction Examples | Gait Symmetry Features |
+|:---:|:---:|
+| <img src="results/transformer/transformer_reconstruction_examples.png" width="420"/> | <img src="results/transformer/transformer_symmetry_features.png" width="420"/> |
+
+*Figure 5 (left): Transformer reconstructions show closer alignment with original signals, particularly in gyroscope and EMG channels. (right): Clearer separation between normal and anomalous clusters in the symmetry feature space.*
+
+</div>
 
 ---
 
-## 🛠️ Tech Stack
+### Model Comparison
+
+| Metric | LSTM Autoencoder | Patch Transformer |
+|---|---|---|
+| **Parameters** | ~660K | ~1.8M |
+| **Anomaly Threshold (P95)** | 2.8637 | 1.7257 |
+| **Training Convergence** | Noisier | Smoother |
+| **Reconstruction Quality** | Good on accelerometer, weaker on gyro/EMG | Strong across all channel types |
+| **Architecture** | 2-layer bidirectional LSTM | 3-layer Transformer, 8-head attention |
+| **Bottleneck** | 32-dim | 32-dim |
+
+The Transformer model achieves a **40% lower anomaly threshold**, indicating it learns tighter representations of normal gait. This makes it more sensitive to subtle pathological deviations while maintaining the same 5% false positive rate on validation data.
+
+---
+
+## Configuration
+
+All hyperparameters are centralized in [`src/config.py`](src/config.py):
+
+| Parameter | Value | Description |
+|---|---|---|
+| `WINDOW_SIZE` | 128 | ~2.1 seconds at 60 Hz (~2 gait cycles) |
+| `WINDOW_STRIDE` | 64 | 50% overlap between consecutive windows |
+| `BOTTLENECK_DIM` | 32 | Latent space dimensionality |
+| `BATCH_SIZE` | 256 | Training batch size |
+| `LEARNING_RATE` | 1e-3 | AdamW initial learning rate |
+| `WEIGHT_DECAY` | 1e-4 | L2 regularization |
+| `EARLY_STOPPING` | 10 epochs | Patience before stopping |
+| `ANOMALY_PERCENTILE` | 95 | Threshold = P95 of validation errors |
+| `PATCH_SIZE` | 16 | Transformer patch size (128/16 = 8 tokens) |
+
+---
+
+## Tech Stack
 
 | Component | Technology |
 |---|---|
@@ -216,22 +225,23 @@ All hyperparameters live in a single file — [`src/config.py`](src/config.py):
 | **Optimization** | AdamW + CosineAnnealingWarmRestarts |
 | **Data Storage** | SQLite (via `create_db.py`) |
 | **Visualization** | Matplotlib + Seaborn |
-| **Feature Eng.** | SciPy (signal processing) + scikit-learn |
+| **Signal Processing** | SciPy |
+| **Metrics** | scikit-learn (ROC-AUC, F1, Precision-Recall) |
 
 ---
 
-## 📖 References
+## References
 
 - **HuGaDB Dataset**: Chereshnev & Kertész-Farkas (2018). *HuGaDB: Human Gait Database for Activity Recognition from Wearable Inertial Sensor Networks.* [GitHub](https://github.com/romanchereshnev/HuGaDB)
 - **PatchTST**: Nie et al. (2023). *A Time Series is Worth 64 Words: Long-term Forecasting with Transformers.* ICLR 2023.
-- **LSTM Autoencoder for Anomaly Detection**: Malhotra et al. (2016). *LSTM-based Encoder-Decoder for Multi-sensor Anomaly Detection.*
+- **LSTM-AE for Anomaly Detection**: Malhotra et al. (2016). *LSTM-based Encoder-Decoder for Multi-sensor Anomaly Detection.*
 
 ---
 
 <div align="center">
 
-**Built with ❤️ and PyTorch**
+**Built with PyTorch**
 
-*If this project helped your research, give it a ⭐!*
+*If this project helped your research, consider giving it a star.*
 
 </div>
