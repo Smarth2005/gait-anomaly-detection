@@ -38,7 +38,7 @@ Strict leave-N-subjects-out protocol (12 train / 3 val / 3 test) to prevent data
 <td width="50%">
 
 **Gyroscope Corruption Repair**
-Automated detection and correction of the documented 10x amplification + int16 clipping artifacts across 300+ files in the HuGaDB dataset.
+Automated detection and correction of the documented 10x amplification + int16 clipping artifacts across 450+ files in the HuGaDB dataset.
 
 **Clinical Feature Engineering**
 Hand-crafted gait biomarkers — Symmetry Index, Harmonic Ratio, Jerk, Step Regularity, and EMG Asymmetry — for interpretable anomaly analysis.
@@ -57,7 +57,7 @@ Training curves, reconstruction error distributions, original-vs-reconstructed s
 <div align="center">
 <img src="results/pipeline_flowchart.png" alt="End-to-End Pipeline Flowchart" width="750"/>
 <br><br>
-<em>Figure 1: End-to-end pipeline from raw HuGaDB sensor data to pathological gait classification.</em>
+<em>Fig. 1: End-to-end pipeline from raw HuGaDB sensor data to pathological gait classification.</em>
 </div>
 
 ---
@@ -75,7 +75,7 @@ Training curves, reconstruction error distributions, original-vs-reconstructed s
 │   ├── config.py              # All hyperparameters and paths (single source of truth)
 │   ├── data/
 │   │   ├── preprocessing.py   # Load → correct → normalize → window pipeline
-│   │   ├── corruption_map.py  # Per-file gyroscope corruption registry (300+ entries)
+│   │   ├── corruption_map.py  # Per-file gyroscope corruption registry (450+ entries)
 │   │   ├── features.py        # Gait symmetry and temporal feature extraction
 │   │   └── dataset.py         # PyTorch Dataset + time-series augmentation
 │   ├── models/
@@ -134,7 +134,7 @@ Both scripts run for up to 50 epochs with early stopping (patience=10) and Cosin
 
 The HuGaDB dataset contains a **documented 10x amplification bug** in gyroscope channels across hundreds of files, with values clipped at the int16 boundary (±32767). The pipeline handles this in three steps:
 
-1. **Maps** corrupted channels per-file using a hand-built registry of 300+ entries
+1. **Maps** corrupted channels per-file using a hand-built registry of 450+ entries
 2. **Divides** affected channels by 10 to restore true scale
 3. **Interpolates** clipped values (formerly at ±32767, now ±3276.7) using linear interpolation
 
@@ -164,7 +164,7 @@ The LSTM Autoencoder serves as the sequential baseline model (~660K parameters).
 |:---:|:---:|
 | <img src="results/training_history.png" width="420"/> | <img src="results/error_distribution.png" width="420"/> |
 
-*Training and validation loss curves over 50 epochs with CosineAnnealingWarmRestarts LR schedule (left). Reconstruction error distribution across train, validation, and test splits with the anomaly threshold at P95 = 2.8637 (right).*
+*Fig. 2: Training and validation loss curves over 50 epochs with CosineAnnealingWarmRestarts LR schedule (left). Reconstruction error distribution across train, validation, and test splits with the anomaly threshold at P95 = 2.8637 (right).*
 
 </div>
 
@@ -174,7 +174,7 @@ The LSTM Autoencoder serves as the sequential baseline model (~660K parameters).
 |:---:|:---:|
 | <img src="results/reconstruction_examples.png" width="420"/> | <img src="results/symmetry_features.png" width="420"/> |
 
-*Original vs reconstructed sensor signals for normal (low MSE) and anomalous (high MSE) windows across accelerometer, gyroscope, and EMG channels (left). Gait symmetry features plotted against reconstruction error — anomalous windows (crimson) cluster at higher asymmetry values (right).*
+*Fig. 3: Original vs reconstructed sensor signals for normal (low MSE) and anomalous (high MSE) windows across accelerometer, gyroscope, and EMG channels (left). Gait symmetry features plotted against reconstruction error — anomalous windows (crimson) cluster at higher asymmetry values (right).*
 
 </div>
 
@@ -190,7 +190,7 @@ The Patch-based Transformer Autoencoder (~1.8M parameters) segments each window 
 |:---:|:---:|
 | <img src="results/transformer/transformer_training_history.png" width="420"/> | <img src="results/transformer/transformer_error_distribution.png" width="420"/> |
 
-*Transformer training convergence — smoother loss curves compared to the LSTM, indicating more stable optimization (left). Tighter error distribution with threshold at P95 = 1.7257, reflecting stronger reconstruction capability on normal gait (right).*
+*Fig. 4: Transformer training convergence — smoother loss curves compared to the LSTM, indicating more stable optimization (left). Tighter error distribution with threshold at P95 = 1.7257, reflecting stronger reconstruction capability on normal gait (right).*
 
 </div>
 
@@ -200,7 +200,7 @@ The Patch-based Transformer Autoencoder (~1.8M parameters) segments each window 
 |:---:|:---:|
 | <img src="results/transformer/transformer_reconstruction_examples.png" width="420"/> | <img src="results/transformer/transformer_symmetry_features.png" width="420"/> |
 
-*Transformer reconstructions show closer alignment with original signals, particularly in gyroscope and EMG channels (left). Clearer separation between normal and anomalous clusters in the symmetry feature space (right).*
+*Fig. 5: Transformer reconstructions show closer alignment with original signals, particularly in gyroscope and EMG channels (left). Clearer separation between normal and anomalous clusters in the symmetry feature space (right).*
 
 </div>
 
@@ -214,7 +214,7 @@ The Patch-based Transformer Autoencoder (~1.8M parameters) segments each window 
 | **Anomaly Threshold (P95)** | 2.8637 | 1.7257 |
 | **Training Convergence** | Noisier | Smoother |
 | **Reconstruction Quality** | Good on accelerometer, weaker on gyro/EMG | Strong across all channel types |
-| **Architecture** | 2-layer bidirectional LSTM | 3-layer Transformer, 8-head attention |
+| **Architecture** | 2-layer unidirectional LSTM | 3-layer Transformer, 8-head attention |
 | **Bottleneck** | 32-dim | 32-dim |
 
 The Transformer model achieves a **40% lower anomaly threshold**, indicating it learns tighter representations of normal gait. This makes it more sensitive to subtle pathological deviations while maintaining the same 5% false positive rate on validation data.
