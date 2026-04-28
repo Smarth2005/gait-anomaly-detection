@@ -251,7 +251,7 @@ All hyperparameters are centralized in [`src/config.py`](src/config.py):
 | **Data Storage** | SQLite (via `create_db.py`) |
 | **Visualization** | Matplotlib + Seaborn |
 | **Signal Processing** | SciPy |
-| **Metrics** | scikit-learn (ROC-AUC, F1, Precision-Recall) |
+
 
 ---
 
