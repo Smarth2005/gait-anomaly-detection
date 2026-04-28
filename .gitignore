@@ -1,0 +1,38 @@
+# ──── Python ────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# ──── Virtual Environments ────
+venv/
+env/
+.env/
+
+# ──── IDE ────
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ──── Data (large files — not tracked) ────
+HuGaDB.db
+HumanGaitDataBase/
+
+# ──── Model Checkpoints (large binaries) ────
+checkpoints/*.pt
+
+# ──── OS ────
+.DS_Store
+Thumbs.db
+
+# ──── Jupyter ────
+.ipynb_checkpoints/
+
+# ──── Misc ────
+implementation_plan.md
+implementation_plan_phase2
