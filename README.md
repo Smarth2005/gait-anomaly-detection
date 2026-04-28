@@ -112,8 +112,8 @@ An unsupervised anomaly detection pipeline that trains autoencoder models on hea
 ### 1. Clone & Install
 
 ```bash
-git clone https://github.com/<your-username>/pathological-gait-detection.git
-cd pathological-gait-detection
+git clone https://github.com/Smarth2005/gait-anomaly-detection.git
+cd gait-anomaly-detection
 pip install -r requirements.txt
 ```
 
