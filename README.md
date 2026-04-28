@@ -25,25 +25,25 @@ An unsupervised anomaly detection pipeline that trains autoencoder models on hea
 <tr>
 <td width="50%">
 
-**Dual Architecture**
+**Dual Architecture.**
 LSTM Autoencoder as a sequential baseline, compared against a Patch-based Transformer Autoencoder following recent 2024 time-series modeling advances.
 
-**38-Channel Sensor Fusion**
+**38-Channel Sensor Fusion.**
 18 accelerometer + 18 gyroscope + 2 EMG channels captured from 6 body locations, processed jointly for holistic gait representation.
 
-**Subject-Aware Evaluation**
+**Subject-Aware Evaluation.**
 Strict leave-N-subjects-out protocol (12 train / 3 val / 3 test) to prevent data leakage and ensure clinical generalizability.
 
 </td>
 <td width="50%">
 
-**Gyroscope Corruption Repair**
+**Gyroscope Corruption Repair.**
 Automated detection and correction of the documented 10x amplification + int16 clipping artifacts across 450+ files in the HuGaDB dataset.
 
-**Clinical Feature Engineering**
+**Clinical Feature Engineering.**
 Hand-crafted gait biomarkers — Symmetry Index, Harmonic Ratio, Jerk, Step Regularity, and EMG Asymmetry — for interpretable anomaly analysis.
 
-**Full Visualization Suite**
+**Full Visualization Suite.**
 Training curves, reconstruction error distributions, original-vs-reconstructed signal overlays, and symmetry feature scatter plots — generated automatically after each training run.
 
 </td>
@@ -210,7 +210,10 @@ The Patch-based Transformer Autoencoder (~1.8M parameters) segments each window 
 
 | Metric | LSTM Autoencoder | Patch Transformer |
 |---|---|---|
-| **Parameters** | ~660K | ~1.8M |
+| **Parameters** | ~495K | ~1.02M |
+| **Train MSE (Mean)** | 0.738 | 0.368 |
+| **Val MSE (Mean)** | 1.454 | 0.946 |
+| **Test MSE (Mean)** | 1.594 | 1.086 |
 | **Anomaly Threshold (P95)** | 2.8637 | 1.7257 |
 | **Training Convergence** | Noisier | Smoother |
 | **Reconstruction Quality** | Good on accelerometer, weaker on gyro/EMG | Strong across all channel types |
